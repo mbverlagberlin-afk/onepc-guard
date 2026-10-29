@@ -210,6 +210,44 @@ h2 { font-size: 18px; margin: 0; }
 ol.steps { padding-left: 20px; }
 ol.steps li { margin: 6px 0; }
 
+#install {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 16px 16px 0;
+}
+
+.install-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 44px 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #1d4ed8, #0b1736);
+    color: #fff;
+}
+
+.install-card div { flex: 1; }
+.install-card strong { display: block; }
+.install-card span { display: block; color: #c7d2ea; font-size: 14px; margin-top: 2px; }
+.install-card span strong { display: inline; color: #fff; }
+.install-card .button { min-height: 42px; border-color: #fff; background: #fff; color: #1d4ed8; }
+
+.install-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #c7d2ea;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
 #toast {
     position: fixed;
     left: 16px;

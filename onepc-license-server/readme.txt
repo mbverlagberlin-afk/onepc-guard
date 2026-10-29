@@ -1,7 +1,7 @@
 === OnePC Lizenzserver ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 
 Lizenzschlüssel für OnePC Guard über WooCommerce verkaufen.
@@ -25,6 +25,10 @@ Lizenzschlüssel für OnePC Guard über WooCommerce verkaufen.
 Der private Signaturschlüssel liegt in der Option opls_sign_secret und darf nicht verloren gehen (Datenbank-Backup!).
 
 == Changelog ==
+
+= 1.1.1 =
+* Handy-App ließ sich auf Android nicht installieren: WordPress hat die App-Dateien umgeleitet (Schrägstrich), Browser lehnen das ab
+* Neu: Knopf „Installieren“ bzw. Anleitung für iPhone, Android und Samsung direkt in der App
 
 = 1.1.0 =
 * Neu: OnePC-App fürs Handy (/onepc-app/) mit Geräte-Status und Aufträgen

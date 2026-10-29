@@ -222,6 +222,80 @@
         navigator.serviceWorker.register(config.sw, { scope: config.scope }).catch(() => {});
     }
 
+    /* Installieren auf dem Startbildschirm ------------------------------- */
+
+    const installBox = document.getElementById('install');
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const ua = navigator.userAgent;
+    const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isSamsung = /SamsungBrowser/.test(ua);
+    let installPrompt = null;
+    let dismissed = false;
+    try {
+        dismissed = localStorage.getItem('onepc-install-dismissed') === '1';
+    } catch {
+        // Ohne Speicher den Hinweis einfach zeigen.
+    }
+
+    function showInstall(html) {
+        if (standalone || dismissed || !installBox) {
+            return;
+        }
+        installBox.innerHTML = `<div class="install-card">${html}<button class="install-close" data-install="close" aria-label="Hinweis schließen">×</button></div>`;
+        installBox.hidden = false;
+    }
+
+    // Android/Chrome: eigener Knopf statt verstecktem Menüpunkt.
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        installPrompt = event;
+        showInstall(`<div><strong>OnePC als App installieren</strong><span>Mit eigenem Symbol auf dem Startbildschirm.</span></div>
+            <button class="button primary" data-install="go">Installieren</button>`);
+    });
+
+    window.addEventListener('appinstalled', () => {
+        installBox.hidden = true;
+        toast('OnePC wurde installiert. Du findest die App auf dem Startbildschirm.');
+    });
+
+    // Anleitung, falls der Browser keinen Installations-Dialog anbietet.
+    setTimeout(() => {
+        if (installPrompt || standalone) {
+            return;
+        }
+        let steps;
+        if (isIOS) {
+            steps = 'In Safari unten auf <strong>Teilen</strong> <span aria-hidden="true">⬆︎</span> tippen, dann <strong>„Zum Home-Bildschirm“</strong>.';
+        } else if (isSamsung) {
+            steps = 'Unten auf <strong>☰ Menü</strong> tippen, dann <strong>„Seite hinzufügen zu“ → „Startbildschirm“</strong>.';
+        } else {
+            steps = 'Oben rechts auf <strong>⋮</strong> tippen, dann <strong>„App installieren“</strong> oder <strong>„Zum Startbildschirm hinzufügen“</strong>.';
+        }
+        showInstall(`<div><strong>OnePC auf den Startbildschirm legen</strong><span>${steps}</span></div>`);
+    }, 2500);
+
+    installBox && installBox.addEventListener('click', async (event) => {
+        const action = event.target.closest('[data-install]');
+        if (!action) {
+            return;
+        }
+        if (action.dataset.install === 'go' && installPrompt) {
+            installPrompt.prompt();
+            const choice = await installPrompt.userChoice.catch(() => null);
+            installPrompt = null;
+            if (choice && choice.outcome === 'accepted') {
+                installBox.hidden = true;
+            }
+            return;
+        }
+        installBox.hidden = true;
+        try {
+            localStorage.setItem('onepc-install-dismissed', '1');
+        } catch {
+            // egal
+        }
+    });
+
     if (config.nonce) {
         load().then(schedule);
     }

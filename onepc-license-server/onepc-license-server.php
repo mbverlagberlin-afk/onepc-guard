@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OnePC Lizenzserver
  * Description: Erzeugt beim Kauf in WooCommerce Lizenzschlüssel für OnePC Guard, prüft die Aktivierung im Programm und stellt die OnePC-App fürs Handy bereit (/onepc-app/).
- * Version: 1.1.0
+ * Version: 1.1.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Requires Plugins: woocommerce
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('OPLS_VERSION', '1.1.0');
+define('OPLS_VERSION', '1.1.1');
 define('OPLS_DB_VERSION', '2');
 define('OPLS_FILE', __FILE__);
 

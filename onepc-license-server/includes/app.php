@@ -31,6 +31,12 @@ add_filter('query_vars', function ($vars) {
     return $vars;
 });
 
+// WordPress darf diese Adressen nicht umleiten (z. B. Schrägstrich anhängen):
+// Browser lehnen weitergeleitete Service-Worker ab, dann ist die App nicht installierbar.
+add_filter('redirect_canonical', function ($redirect) {
+    return get_query_var('opls_app') ? false : $redirect;
+});
+
 add_action('template_redirect', function () {
     $view = get_query_var('opls_app');
     if ($view === '' || $view === null) {
@@ -45,7 +51,7 @@ add_action('template_redirect', function () {
         opls_app_page();
     }
     exit;
-});
+}, 0);
 
 function opls_app_asset($file) {
     return plugins_url('assets/app/' . $file, OPLS_FILE) . '?v=' . OPLS_VERSION;
@@ -150,6 +156,7 @@ function opls_app_page() {
             <a class="logout" href="<?php echo esc_url($config['logout']); ?>">Abmelden</a>
         <?php endif; ?>
     </header>
+    <div id="install" hidden></div>
     <main id="app">
         <?php if (!$logged_in) : ?>
             <section class="card login">
