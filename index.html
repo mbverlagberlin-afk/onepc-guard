@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>To-Do List</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="todo-panel">
+        <header class="todo-header">
+          <p class="eyebrow">Daily planner</p>
+          <h1>To-Do List</h1>
+        </header>
+
+        <form id="todo-form" class="todo-form" autocomplete="off">
+          <label class="sr-only" for="todo-input">Add a new task</label>
+          <input
+            id="todo-input"
+            type="text"
+            name="todo"
+            placeholder="Add a new task..."
+            maxlength="120"
+          />
+          <button type="submit">Add</button>
+        </form>
+
+        <div class="toolbar" aria-label="Task actions">
+          <div id="task-counter" class="counter" aria-live="polite">0 items left</div>
+          <div class="filters" role="group" aria-label="Filter tasks">
+            <button class="filter-btn active" data-filter="all" type="button">All</button>
+            <button class="filter-btn" data-filter="active" type="button">Active</button>
+            <button class="filter-btn" data-filter="completed" type="button">Completed</button>
+          </div>
+        </div>
+
+        <ul id="todo-list" class="todo-list" aria-live="polite"></ul>
+
+        <div class="footer-row">
+          <button id="clear-completed" class="secondary-btn" type="button">
+            Clear completed
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <template id="todo-item-template">
+      <li class="todo-item">
+        <label class="todo-check">
+          <input type="checkbox" class="checkbox" />
+          <span class="task-text"></span>
+        </label>
+        <button type="button" class="delete-btn" aria-label="Delete task">Delete</button>
+      </li>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
