@@ -4,7 +4,10 @@
  *
  * Der PC meldet sich regelmäßig mit Lizenzschlüssel und Gerätekennung:
  *   POST /wp-json/onepc/v1/device/sync   { license_key, device_id, product, status, results }
- * Die App nutzt das Kundenkonto (WordPress-Anmeldung + REST-Nonce):
+ * Die App meldet sich mit E-Mail-Adresse und Lizenzschlüssel an und erhält ein
+ * Token (Header X-OnePC-Token). Alternativ gilt eine bestehende WordPress-Anmeldung.
+ *   POST /wp-json/onepc/v1/app/login     { email, license_key }
+ *   POST /wp-json/onepc/v1/app/logout
  *   GET  /wp-json/onepc/v1/app/devices
  *   POST /wp-json/onepc/v1/app/command   { device, type }
  */
@@ -15,6 +18,7 @@ if (!defined('ABSPATH')) {
 
 const OPLS_COMMANDS = ['scan-quick', 'scan-full', 'clean', 'security-check'];
 const OPLS_ONLINE_SECONDS = 180;
+const OPLS_TOKEN_DAYS = 180;
 
 add_action('rest_api_init', function () {
     register_rest_route('onepc/v1', '/device/sync', [
@@ -22,15 +26,25 @@ add_action('rest_api_init', function () {
         'callback' => 'opls_api_device_sync',
         'permission_callback' => '__return_true',
     ]);
+    register_rest_route('onepc/v1', '/app/login', [
+        'methods' => 'POST',
+        'callback' => 'opls_api_app_login',
+        'permission_callback' => '__return_true',
+    ]);
+    register_rest_route('onepc/v1', '/app/logout', [
+        'methods' => 'POST',
+        'callback' => 'opls_api_app_logout',
+        'permission_callback' => '__return_true',
+    ]);
     register_rest_route('onepc/v1', '/app/devices', [
         'methods' => 'GET',
         'callback' => 'opls_api_app_devices',
-        'permission_callback' => 'is_user_logged_in',
+        'permission_callback' => 'opls_app_permission',
     ]);
     register_rest_route('onepc/v1', '/app/command', [
         'methods' => 'POST',
         'callback' => 'opls_api_app_command',
-        'permission_callback' => 'is_user_logged_in',
+        'permission_callback' => 'opls_app_permission',
     ]);
 });
 
@@ -127,18 +141,104 @@ function opls_api_device_sync(WP_REST_Request $request) {
 /* App                                                                      */
 /* ---------------------------------------------------------------------- */
 
+function opls_request_token() {
+    $token = isset($_SERVER['HTTP_X_ONEPC_TOKEN']) ? (string) wp_unslash($_SERVER['HTTP_X_ONEPC_TOKEN']) : '';
+    return preg_match('/^[a-f0-9]{64}$/', $token) ? $token : '';
+}
+
 /**
- * Alle Geräte, die zu Lizenzen des angemeldeten Kunden gehören
- * (gleiche E-Mail-Adresse oder eigene Bestellung).
+ * Wer nutzt die App gerade? Token aus der App-Anmeldung oder WordPress-Konto.
+ * Rückgabe: ['email' => ..., 'user_id' => ..., 'name' => ...] oder null.
  */
-function opls_user_activations($user) {
+function opls_app_identity() {
+    global $wpdb;
+    static $identity = false;
+    if ($identity !== false) {
+        return $identity;
+    }
+    $identity = null;
+
+    $token = opls_request_token();
+    if ($token !== '') {
+        $table = opls_table('app_tokens');
+        $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE token_hash = %s", hash('sha256', $token)));
+        if ($row && strtotime($row->last_used . ' UTC') > time() - OPLS_TOKEN_DAYS * DAY_IN_SECONDS) {
+            if (strtotime($row->last_used . ' UTC') < time() - HOUR_IN_SECONDS) {
+                $wpdb->update($table, ['last_used' => opls_now()], ['id' => $row->id]);
+            }
+            $identity = ['email' => $row->email, 'user_id' => 0, 'name' => $row->name !== '' ? $row->name : $row->email];
+        }
+        return $identity;
+    }
+
+    if (is_user_logged_in()) {
+        $user = wp_get_current_user();
+        $identity = ['email' => $user->user_email, 'user_id' => (int) $user->ID, 'name' => $user->display_name];
+    }
+    return $identity;
+}
+
+function opls_app_permission() {
+    return opls_app_identity()
+        ? true
+        : new WP_Error('opls_login', 'Bitte melde dich mit E-Mail-Adresse und Lizenzschlüssel an.', ['status' => 401]);
+}
+
+function opls_api_app_login(WP_REST_Request $request) {
     global $wpdb;
 
-    $where = ['l.email = %s'];
-    $params = [$user->user_email];
+    if (opls_rate_limited('login', 10)) {
+        return opls_api_error('rate_limited', 'Zu viele Anmeldeversuche. Bitte warte 10 Minuten.', 429);
+    }
 
-    if (function_exists('wc_get_orders')) {
-        $orders = array_map('absint', (array) wc_get_orders(['customer_id' => $user->ID, 'return' => 'ids', 'limit' => -1]));
+    $email = strtolower(trim((string) $request->get_param('email')));
+    $license = opls_get_license((string) $request->get_param('license_key'));
+
+    // Absichtlich dieselbe Meldung, ob Schlüssel oder E-Mail falsch ist.
+    if (!$license || $email === '' || strtolower(trim($license->email)) !== $email) {
+        return opls_api_error('login_failed', 'E-Mail-Adresse und Lizenzschlüssel passen nicht zusammen. Bitte nimm die Angaben aus deiner Bestell-E-Mail.', 401);
+    }
+    if ($license->status === 'revoked') {
+        return opls_api_error('revoked', 'Dieser Lizenzschlüssel wurde gesperrt.', 403);
+    }
+
+    $table = opls_table('app_tokens');
+    $wpdb->query($wpdb->prepare("DELETE FROM $table WHERE last_used < %s", gmdate('Y-m-d H:i:s', time() - OPLS_TOKEN_DAYS * DAY_IN_SECONDS)));
+
+    $token = bin2hex(random_bytes(32));
+    $name = $license->customer !== '' ? $license->customer : $license->email;
+    $wpdb->insert($table, [
+        'token_hash' => hash('sha256', $token),
+        'email' => $license->email,
+        'name' => $name,
+        'created_at' => opls_now(),
+        'last_used' => opls_now(),
+    ]);
+
+    return rest_ensure_response(['token' => $token, 'name' => $name]);
+}
+
+function opls_api_app_logout() {
+    global $wpdb;
+    $token = opls_request_token();
+    if ($token !== '') {
+        $wpdb->delete(opls_table('app_tokens'), ['token_hash' => hash('sha256', $token)]);
+    }
+    return rest_ensure_response(['success' => true]);
+}
+
+/**
+ * Alle Geräte, die zu Lizenzen der angemeldeten Person gehören
+ * (gleiche E-Mail-Adresse oder eigene Bestellung im Kundenkonto).
+ */
+function opls_user_activations($identity) {
+    global $wpdb;
+
+    $where = ['LOWER(l.email) = %s'];
+    $params = [strtolower($identity['email'])];
+
+    if ($identity['user_id'] && function_exists('wc_get_orders')) {
+        $orders = array_map('absint', (array) wc_get_orders(['customer_id' => $identity['user_id'], 'return' => 'ids', 'limit' => -1]));
         if ($orders) {
             $where[] = 'l.order_id IN (' . implode(',', array_fill(0, count($orders), '%d')) . ')';
             $params = array_merge($params, $orders);
@@ -167,10 +267,10 @@ function opls_mask_key($key) {
 
 function opls_api_app_devices() {
     global $wpdb;
-    $user = wp_get_current_user();
+    $identity = opls_app_identity();
     $devices = [];
 
-    foreach (opls_user_activations($user) as $row) {
+    foreach (opls_user_activations($identity) as $row) {
         $commands = $wpdb->get_results($wpdb->prepare(
             'SELECT id, type, state, result, created_at, updated_at FROM ' . opls_table('commands') . ' WHERE activation_id = %d ORDER BY id DESC LIMIT 8',
             $row->id
@@ -200,7 +300,7 @@ function opls_api_app_devices() {
     }
 
     return rest_ensure_response([
-        'user' => $user->display_name,
+        'user' => $identity['name'],
         'devices' => $devices,
         'server_time' => gmdate('Y-m-d\TH:i:s\Z'),
     ]);
@@ -208,9 +308,9 @@ function opls_api_app_devices() {
 
 function opls_api_app_command(WP_REST_Request $request) {
     global $wpdb;
-    $user = wp_get_current_user();
+    $identity = opls_app_identity();
 
-    if (opls_rate_limited('command', 30, 'user-' . $user->ID)) {
+    if (opls_rate_limited('command', 30, 'user-' . $identity['email'])) {
         return opls_api_error('rate_limited', 'Zu viele Aufträge. Bitte warte einige Minuten.', 429);
     }
 
@@ -221,7 +321,7 @@ function opls_api_app_command(WP_REST_Request $request) {
 
     $device_id = absint($request->get_param('device'));
     $device = null;
-    foreach (opls_user_activations($user) as $row) {
+    foreach (opls_user_activations($identity) as $row) {
         if ((int) $row->id === $device_id) {
             $device = $row;
             break;
@@ -249,7 +349,7 @@ function opls_api_app_command(WP_REST_Request $request) {
         'activation_id' => $device->id,
         'type' => $type,
         'state' => 'queued',
-        'created_by' => $user->ID,
+        'created_by' => $identity['user_id'],
         'created_at' => $now,
         'updated_at' => $now,
     ]);

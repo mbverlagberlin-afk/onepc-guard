@@ -43,7 +43,25 @@ body {
 .brand { flex: 1; min-width: 0; }
 .brand strong { display: block; font-size: 17px; }
 .brand span { display: block; color: #a9b8da; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.logout { color: #c7d2ea; font-size: 14px; text-decoration: none; padding: 8px 4px; }
+.logout { border: 0; background: none; color: #c7d2ea; font: inherit; font-size: 14px; padding: 8px 4px; cursor: pointer; }
+.logout[hidden] { display: none; }
+
+.field { display: block; margin: 14px 0; text-align: left; }
+.field span { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+.field input {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 1px solid #c9d1df;
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--text);
+    font: inherit;
+}
+.field input.key { font-family: ui-monospace, Menlo, Consolas, monospace; text-transform: uppercase; letter-spacing: 0.04em; }
+.login .alt { display: block; margin-top: 16px; color: var(--muted); font-size: 14px; }
+.login .alt a { color: var(--brand); }
+.form-error { margin: 10px 0 0; color: var(--bad); font-size: 14px; }
 
 main {
     max-width: 640px;

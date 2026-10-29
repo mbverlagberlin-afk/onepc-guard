@@ -64,6 +64,20 @@ function opls_install() {
   KEY activation_state (activation_id,state)
 ) $charset;");
 
+    // Anmeldungen in der Handy-App (E-Mail + Lizenzschlüssel, ohne WordPress-Konto).
+    $tokens = opls_table('app_tokens');
+    dbDelta("CREATE TABLE $tokens (
+  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  token_hash char(64) NOT NULL,
+  email varchar(190) NOT NULL,
+  name varchar(190) NOT NULL DEFAULT '',
+  created_at datetime NOT NULL,
+  last_used datetime NOT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY token_hash (token_hash),
+  KEY email (email)
+) $charset;");
+
     opls_keypair();
     update_option('opls_db_version', OPLS_DB_VERSION);
     delete_option('opls_flush_rewrite'); // aus 1.1.0–1.1.2, nicht mehr nötig

@@ -135,9 +135,11 @@ function opls_app_page() {
     $logged_in = $user && $user->exists();
     $config = [
         'rest' => esc_url_raw(rest_url('onepc/v1/')),
+        // Nur für Kunden mit WordPress-Konto; sonst Anmeldung per E-Mail + Lizenzschlüssel.
         'nonce' => $logged_in ? wp_create_nonce('wp_rest') : '',
         'user' => $logged_in ? $user->display_name : '',
-        'logout' => wp_logout_url(opls_app_url()),
+        'wpLogin' => wp_login_url(opls_app_url()),
+        'wpLogout' => wp_logout_url(opls_app_url()),
         'shop' => home_url('/'),
         'sw' => opls_app_url('sw.js'),
         'scope' => opls_app_path(),
@@ -162,23 +164,11 @@ function opls_app_page() {
 <body>
     <header class="top">
         <img src="<?php echo esc_url(opls_app_asset('icon-192.png')); ?>" alt="" width="36" height="36">
-        <div class="brand"><strong>OnePC Guard</strong><span><?php echo $logged_in ? esc_html($user->display_name) : 'Meine PCs'; ?></span></div>
-        <?php if ($logged_in) : ?>
-            <a class="logout" href="<?php echo esc_url($config['logout']); ?>">Abmelden</a>
-        <?php endif; ?>
+        <div class="brand"><strong>OnePC Guard</strong><span id="who">Meine PCs</span></div>
+        <button class="logout" id="logout" type="button" hidden>Abmelden</button>
     </header>
     <div id="install" hidden></div>
-    <main id="app">
-        <?php if (!$logged_in) : ?>
-            <section class="card login">
-                <h1>Deine PCs im Blick</h1>
-                <p>Melde dich mit deinem Kundenkonto von <?php echo esc_html(wp_parse_url(home_url(), PHP_URL_HOST)); ?> an, um Status, Virenprüfung und Aufräumen deiner PCs zu steuern.</p>
-                <a class="button primary" href="<?php echo esc_url(wp_login_url(opls_app_url())); ?>">Anmelden</a>
-            </section>
-        <?php else : ?>
-            <p class="loading">Lade deine PCs …</p>
-        <?php endif; ?>
-    </main>
+    <main id="app"><p class="loading">Einen Moment …</p></main>
     <div id="toast" role="status" aria-live="polite"></div>
     <script>window.ONEPC = <?php echo wp_json_encode($config, JSON_UNESCAPED_SLASHES); ?>;</script>
     <script src="<?php echo esc_url(opls_app_asset('app.js')); ?>"></script>

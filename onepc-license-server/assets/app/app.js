@@ -6,6 +6,14 @@
     const REFRESH = 15000;
     let timer = null;
     let devices = [];
+    let token = null;
+    try {
+        token = localStorage.getItem('onepc-token');
+    } catch {
+        // Ohne Speicher muss man sich bei jedem Start neu anmelden.
+    }
+    const who = document.getElementById('who');
+    const logoutButton = document.getElementById('logout');
 
     const LABELS = {
         'scan-quick': 'Schnellprüfung',
@@ -55,38 +63,108 @@
         toastTimer = setTimeout(() => { el.className = ''; }, 4000);
     }
 
+    function authed() {
+        return Boolean(token || config.nonce);
+    }
+
     async function api(path, options = {}) {
-        const response = await fetch(config.rest + path, {
-            credentials: 'same-origin',
-            ...options,
-            headers: { 'X-WP-Nonce': config.nonce, 'Content-Type': 'application/json', ...(options.headers || {}) },
-        });
-        const data = await response.json().catch(() => ({}));
-        if (response.status === 401 || (response.status === 403 && data.code === 'rest_cookie_invalid_nonce')) {
-            // Anmeldung abgelaufen: einmal neu laden, das führt zur Anmeldung.
-            // Ein zweites Mal nicht, falls ein Sicherheits-Plugin die Schnittstelle blockiert.
-            let reloaded = false;
-            try {
-                reloaded = sessionStorage.getItem('onepc-reloaded') === '1';
-                sessionStorage.setItem('onepc-reloaded', '1');
-            } catch {
-                reloaded = true;
-            }
-            if (!reloaded) {
-                location.reload();
-            }
-            throw new Error('Die Anmeldung ist abgelaufen oder die Schnittstelle /wp-json/ wird blockiert. Bitte melde dich ab und wieder an.');
+        const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+        if (token) {
+            headers['X-OnePC-Token'] = token;
+        } else if (config.nonce) {
+            headers['X-WP-Nonce'] = config.nonce;
         }
-        try {
-            sessionStorage.removeItem('onepc-reloaded');
-        } catch {
-            // Ohne sessionStorage einfach weitermachen.
+        const response = await fetch(config.rest + path, { credentials: 'same-origin', ...options, headers });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 401 && !path.endsWith('app/login')) {
+            // Anmeldung abgelaufen oder ungültig.
+            setToken(null);
+            config.nonce = '';
+            showLogin('Bitte melde dich erneut an.');
+            throw Object.assign(new Error('Bitte erneut anmelden.'), { silent: true });
         }
         if (!response.ok) {
-            throw new Error(data.message || 'Der Server antwortet nicht.');
+            throw new Error(data.message || 'Der Server antwortet nicht. Ist die Internetverbindung aktiv?');
         }
         return data;
     }
+
+    function setToken(value, name) {
+        token = value;
+        try {
+            if (value) {
+                localStorage.setItem('onepc-token', value);
+                localStorage.setItem('onepc-name', name || '');
+            } else {
+                localStorage.removeItem('onepc-token');
+                localStorage.removeItem('onepc-name');
+            }
+        } catch {
+            // egal
+        }
+    }
+
+    function updateHeader(name) {
+        who.textContent = name || 'Meine PCs';
+        logoutButton.hidden = !authed();
+    }
+
+    function showLogin(message) {
+        clearTimeout(timer);
+        updateHeader('');
+        app.innerHTML = `<section class="card login">
+            <h1>Deine PCs im Blick</h1>
+            <p class="muted">Melde dich mit der <strong>E-Mail-Adresse</strong> und dem <strong>Lizenzschlüssel</strong> aus deiner Bestellung an.</p>
+            <form id="login-form" novalidate>
+                <label class="field"><span>E-Mail-Adresse</span>
+                    <input type="email" name="email" autocomplete="email" inputmode="email" required></label>
+                <label class="field"><span>Lizenzschlüssel</span>
+                    <input class="key" type="text" name="key" placeholder="OPC-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" required></label>
+                <button class="button primary" type="submit" style="width:100%">Anmelden</button>
+                ${message ? `<p class="form-error">${esc(message)}</p>` : ''}
+            </form>
+            <span class="alt">Du hast ein Kundenkonto im Shop? <a href="${esc(config.wpLogin)}">Mit Kundenkonto anmelden</a></span>
+        </section>`;
+    }
+
+    app.addEventListener('submit', async (event) => {
+        if (event.target.id !== 'login-form') {
+            return;
+        }
+        event.preventDefault();
+        const form = event.target;
+        const button = form.querySelector('button');
+        const email = form.email.value.trim();
+        const key = form.key.value.trim().toUpperCase();
+        if (!email || !key) {
+            toast('Bitte E-Mail-Adresse und Lizenzschlüssel eingeben.', true);
+            return;
+        }
+        button.disabled = true;
+        try {
+            const data = await api('app/login', { method: 'POST', body: JSON.stringify({ email, license_key: key }) });
+            setToken(data.token, data.name);
+            updateHeader(data.name);
+            app.innerHTML = '<p class="loading">Lade deine PCs …</p>';
+            await load();
+            schedule();
+        } catch (error) {
+            button.disabled = false;
+            const old = form.querySelector('.form-error');
+            if (old) old.remove();
+            form.insertAdjacentHTML('beforeend', `<p class="form-error">${esc(error.message)}</p>`);
+        }
+    });
+
+    logoutButton.addEventListener('click', async () => {
+        if (token) {
+            await api('app/logout', { method: 'POST' }).catch(() => {});
+            setToken(null);
+            showLogin();
+            return;
+        }
+        location.href = config.wpLogout;
+    });
 
     function jobText(job) {
         const r = job.result || {};
@@ -168,7 +246,7 @@
                     <li>Den Lizenzschlüssel aus deiner Bestellung aktivieren (Seite „Lizenz“).</li>
                     <li>In OnePC Guard unter <strong>Einstellungen</strong> „Mit der OnePC-App verbinden“ einschalten.</li>
                 </ol>
-                <p class="muted small">Die Lizenz muss mit der E-Mail-Adresse dieses Kundenkontos gekauft worden sein.</p>
+                <p class="muted small">Angezeigt werden alle PCs mit Lizenzen, die auf deine E-Mail-Adresse gekauft wurden.</p>
                 <a class="button" href="${esc(config.shop)}">Zum Shop</a>
             </section>`;
             return;
@@ -181,15 +259,19 @@
         try {
             const data = await api('app/devices');
             devices = data.devices || [];
+            updateHeader(data.user);
             render();
         } catch (error) {
+            if (error.silent) {
+                return;
+            }
             app.innerHTML = `<section class="card"><div class="notice bad">${esc(error.message)}</div><button class="button" onclick="location.reload()">Erneut versuchen</button></section>`;
         }
     }
 
     function schedule() {
         clearTimeout(timer);
-        if (document.visibilityState === 'visible') {
+        if (document.visibilityState === 'visible' && authed()) {
             timer = setTimeout(() => load().then(schedule), REFRESH);
         }
     }
@@ -211,7 +293,7 @@
     });
 
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && config.nonce) {
+        if (document.visibilityState === 'visible' && authed()) {
             load().then(schedule);
         } else {
             clearTimeout(timer);
@@ -299,7 +381,17 @@
         }
     });
 
-    if (config.nonce) {
+    if (authed()) {
+        let name = config.user;
+        try {
+            name = name || localStorage.getItem('onepc-name');
+        } catch {
+            // egal
+        }
+        updateHeader(name);
+        app.innerHTML = '<p class="loading">Lade deine PCs …</p>';
         load().then(schedule);
+    } else {
+        showLogin();
     }
 })();

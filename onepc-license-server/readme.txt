@@ -1,7 +1,7 @@
 === OnePC Lizenzserver ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.3
+Stable tag: 1.2.0
 License: GPLv2 or later
 
 Lizenzschlüssel für OnePC Guard über WooCommerce verkaufen.
@@ -14,7 +14,7 @@ Lizenzschlüssel für OnePC Guard über WooCommerce verkaufen.
 * REST-API für die Aktivierung im Programm, mit Ed25519-Signatur und Anfragebegrenzung
 * Verwaltung unter WooCommerce → Lizenzen: suchen, sperren, PCs zurücksetzen, manuell erstellen
 * Automatische Sperre bei Stornierung oder Rückerstattung
-* OnePC-App fürs Handy unter /onepc-app/: Status der eigenen PCs, Virenprüfung und Aufräumen aus der Ferne (Anmeldung mit dem Kundenkonto)
+* OnePC-App fürs Handy unter /onepc-app/: Status der eigenen PCs, Virenprüfung und Aufräumen aus der Ferne (Anmeldung mit E-Mail-Adresse und Lizenzschlüssel)
 
 == Installation ==
 
@@ -25,6 +25,10 @@ Lizenzschlüssel für OnePC Guard über WooCommerce verkaufen.
 Der private Signaturschlüssel liegt in der Option opls_sign_secret und darf nicht verloren gehen (Datenbank-Backup!).
 
 == Changelog ==
+
+= 1.2.0 =
+* Handy-App: Anmeldung mit E-Mail-Adresse und Lizenzschlüssel aus der Bestellung – kein WordPress-Kundenkonto mehr nötig (Kundenkonto geht weiterhin)
+* Neue Tabelle für App-Anmeldungen (180 Tage gültig, Abmelden jederzeit)
 
 = 1.1.3 =
 * /onepc-app/ meldete auf manchen Websites „Seite nicht gefunden“: Die App wird jetzt direkt an der Adresse erkannt, unabhängig von Permalinks und Adressregeln; zusätzlich funktioniert immer ?opls_app=index
