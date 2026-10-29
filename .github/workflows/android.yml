@@ -1,0 +1,58 @@
+name: OnePC Android – Test-App
+
+on:
+  push:
+    paths:
+      - 'onepc-android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: onepc-android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
+
+      - name: APK bauen
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: APK benennen
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          cp app/build/outputs/apk/release/app-release.apk "OnePC-$VERSION.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OnePC-Android
+          path: onepc-android/OnePC-*.apk
+          if-no-files-found: error
+
+      # Test-Release mit direktem Download-Link fürs Handy (wird bei jedem Build ersetzt).
+      - name: Test-Release aktualisieren
+        if: github.repository == 'mbverlagberlin-afk/onepc-guard'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="android-v$VERSION"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --prerelease --target "$GITHUB_SHA" \
+              --title "OnePC für Android $VERSION (Testversion)" \
+              --notes "Testversion der OnePC-App für Android. Herunterladen auf dem Handy, öffnen und Installation aus dieser Quelle erlauben. Benötigt das Lizenz-Plugin ab 1.1.0 im Shop."
+          fi
+          gh release upload "$TAG" "OnePC-$VERSION.apk" --clobber

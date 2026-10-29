@@ -225,7 +225,10 @@
     /* Installieren auf dem Startbildschirm ------------------------------- */
 
     const installBox = document.getElementById('install');
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    // In der Android-App (OnePCApp im User-Agent) ist nichts mehr zu installieren.
+    const standalone = window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true
+        || /OnePCApp\//.test(navigator.userAgent);
     const ua = navigator.userAgent;
     const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isSamsung = /SamsungBrowser/.test(ua);
