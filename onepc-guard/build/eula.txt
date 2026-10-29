@@ -1,0 +1,22 @@
+﻿ENDBENUTZER-LIZENZVERTRAG (EULA) – OnePC Guard
+VORLAGE – vor dem Verkauf bitte rechtlich prüfen lassen.
+
+Anbieter: onemultimedia, www.onemultimedia.de
+
+1. Gegenstand
+OnePC Guard ist ein Programm zur Prüfung der Sicherheitseinstellungen, zum Aufräumen und zur Datensicherung unter Windows. Die Virenprüfung erfolgt mit dem in Windows enthaltenen Microsoft Defender. OnePC Guard ersetzt kein Virenschutzprogramm und keine fachkundige IT-Betreuung.
+
+2. Testversion und Lizenz
+Die Testversion darf 14 Tage kostenlos mit allen Funktionen genutzt werden. Danach ist für Virenprüfung, Aufräumen und Sicherung eine kostenpflichtige Lizenz erforderlich. Eine Lizenz berechtigt zur Nutzung auf der beim Kauf angegebenen Anzahl von PCs. Eine Lizenz kann auf einem PC deaktiviert und auf einem anderen aktiviert werden.
+
+3. Lizenzprüfung und Datenschutz
+Zur Aktivierung und regelmäßigen Prüfung der Lizenz übermittelt das Programm den Lizenzschlüssel, eine anonyme Gerätekennung (Prüfsumme) und den Gerätenamen an den Lizenzserver des Anbieters. Weitere Daten, insbesondere Dateien oder Prüfergebnisse, werden nicht übertragen.
+
+4. Einschränkungen
+Es ist nicht gestattet, das Programm zu verändern, zurückzuentwickeln, Lizenzprüfungen zu umgehen oder Lizenzschlüssel an Dritte weiterzugeben, sofern dies nicht gesetzlich erlaubt ist.
+
+5. Haftung
+Der Anbieter haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie nach dem Produkthaftungsgesetz. Bei leichter Fahrlässigkeit haftet der Anbieter nur bei Verletzung wesentlicher Vertragspflichten und begrenzt auf den vorhersehbaren, vertragstypischen Schaden. Für Datenverlust haftet der Anbieter nur, soweit dieser auch bei regelmäßiger Datensicherung eingetreten wäre. Die Funktion „Aufräumen“ löscht ausschließlich die angezeigten Bereiche; der Nutzer entscheidet selbst, was gelöscht wird.
+
+6. Schlussbestimmungen
+Es gilt das Recht der Bundesrepublik Deutschland. Zwingende Verbraucherschutzvorschriften bleiben unberührt.

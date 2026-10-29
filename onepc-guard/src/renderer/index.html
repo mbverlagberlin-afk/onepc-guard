@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+    <title>OnePC Guard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 6 10v12c0 11.5 7.6 20.5 18 23 10.4-2.5 18-11.5 18-23V10L24 3z" fill="currentColor"/><path d="m15.5 24 6 6 11-12" fill="none" stroke="#0b1736" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div>
+                <strong>OnePC Guard</strong>
+                <span>Sicherheit &amp; Pflege</span>
+            </div>
+        </div>
+        <nav>
+            <button data-page="overview" class="active"><span class="i">◎</span>Übersicht</button>
+            <button data-page="security"><span class="i">⛨</span>Sicherheitscheck</button>
+            <button data-page="scan"><span class="i">⌕</span>Virenprüfung</button>
+            <button data-page="clean"><span class="i">✦</span>Aufräumen</button>
+            <button data-page="backup"><span class="i">⟲</span>Sicherung</button>
+            <button data-page="license"><span class="i">⚿</span>Lizenz</button>
+            <button data-page="settings"><span class="i">⚙</span>Einstellungen</button>
+        </nav>
+        <div class="sidebar-foot" id="license-badge"></div>
+    </aside>
+    <div class="main-col">
+        <div id="update-bar" hidden></div>
+        <main id="content" tabindex="-1"></main>
+    </div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+</body>
+</html>

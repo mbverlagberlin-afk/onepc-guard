@@ -1,0 +1,10 @@
+{
+  "product": "onepc-guard",
+  "serverUrl": "https://onemultimedia.de",
+  "shopUrl": "https://onemultimedia.de",
+  "supportUrl": "https://onemultimedia.de",
+  "publicKey": "W6Uf/XlkdQrz6vvrS6zFSuxLAFrlAlULgTGoAQm7qmU=",
+  "trialDays": 14,
+  "revalidateDays": 7,
+  "offlineGraceDays": 30
+}
