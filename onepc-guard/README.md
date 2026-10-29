@@ -12,7 +12,7 @@ Windows-Programm zum Verkauf über onemultimedia.de: **Sicherheitscheck, Virenpr
 | Aufräumen | Temporäre Dateien, Browser-Zwischenspeicher (Chrome, Edge, Firefox), Absturzberichte, Papierkorb. Große Dateien finden. | Analyse frei, Löschen gesperrt |
 | Sicherung | Ordner auf USB-Festplatte/NAS sichern, ältere Fassungen geänderter und gelöschter Dateien aufbewahren, täglich automatisch über die Windows-Aufgabenplanung, Wiederherstellen. | gesperrt |
 
-| OnePC-App (Handy) | Unter `onemultimedia.de/onepc-app/` mit dem Kundenkonto anmelden: Status aller eigenen PCs, Schnell-/Vollprüfung, Aufräumen und Sicherheitscheck aus der Ferne starten. Im Programm unter *Einstellungen* einschalten. | nur Vollversion |
+| OnePC-App (Handy) | Android-App „OnePC“ oder `onemultimedia.de/onepc-app/`, Anmeldung mit E-Mail-Adresse und Lizenzschlüssel: Status aller eigenen PCs, Schnell-/Vollprüfung, Aufräumen und Sicherheitscheck aus der Ferne starten. Im Programm unter *Einstellungen* einschalten. | nur Vollversion |
 | Automatische Updates | Sucht alle 6 Stunden nach neuen Versionen auf GitHub-Releases, lädt im Hintergrund, installiert beim nächsten Start. | ✔ |
 
 **Wichtig:** OnePC Guard ist bewusst *kein eigenes Antivirenprogramm*, sondern steuert Microsoft Defender. So bekommen Kunden echten Schutz, und es gibt keine falschen Versprechen. Bitte im Shop auch so beschreiben (z. B. „nutzt den Virenscanner von Windows“).
@@ -44,7 +44,8 @@ Die Updates kommen aus dem öffentlichen Repository `mbverlagberlin-afk/onepc-gu
 ## OnePC-App (Handy)
 
 - Wird vom Lizenz-Plugin unter `/onepc-app/` bereitgestellt (Plugin ab 1.1.0, „schöne“ Permalinks müssen aktiv sein).
-- Kunden melden sich mit dem Kundenkonto an, mit dessen E-Mail-Adresse bzw. Bestellung die Lizenz gekauft wurde. Im Kundenkonto erscheint der Menüpunkt „OnePC-App“.
+- Kunden melden sich mit E-Mail-Adresse und Lizenzschlüssel aus der Bestellung an (kein Kundenkonto nötig) oder mit ihrem Kundenkonto. Angezeigt werden alle PCs mit Lizenzen auf diese E-Mail-Adresse. Im Kundenkonto erscheint zusätzlich der Menüpunkt „OnePC-App“.
+- Android-App: `onepc-android/` (APK im Release `android-v…`).
 - Der PC meldet sich jede Minute beim Shop (nur bei eingeschalteter Verbindung) und holt Aufträge ab; es wird kein Port am PC geöffnet. Aufträge verfallen nach 6 Stunden, wenn der PC nicht erreichbar ist.
 - Auf dem Handy über „Zum Home-Bildschirm“ (iPhone: Teilen-Menü; Android: Browsermenü) als App installieren.
 - Sicherheits- oder Cache-Plugins dürfen `/wp-json/onepc/` und `/onepc-app/` nicht blockieren bzw. zwischenspeichern.

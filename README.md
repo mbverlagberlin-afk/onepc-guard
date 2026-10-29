@@ -1,136 +1,28 @@
-const STORAGE_KEY = 'todo-list-items-v1';
-const FILTERS = ['all', 'active', 'completed'];
+# OnePC Guard
 
-const todoForm = document.getElementById('todo-form');
-const todoInput = document.getElementById('todo-input');
-const todoList = document.getElementById('todo-list');
-const taskCounter = document.getElementById('task-counter');
-const clearCompletedBtn = document.getElementById('clear-completed');
-const filterButtons = [...document.querySelectorAll('.filter-btn')];
-const template = document.getElementById('todo-item-template');
+Sicherheitscheck, Virenprüfung, Aufräumen und Datensicherung für Windows – mit Handy-App und automatischen Updates.
+Vertrieb über [onemultimedia.de](https://onemultimedia.de).
 
-let currentFilter = 'all';
+| Ordner | Inhalt |
+|---|---|
+| [`onepc-guard/`](onepc-guard/) | Windows-Programm (Electron): Sicherheitscheck, Virenprüfung mit Microsoft Defender, Aufräumen, Sicherung, Lizenz, Verbindung zur Handy-App, automatische Updates |
+| [`onepc-license-server/`](onepc-license-server/) | WordPress/WooCommerce-Plugin: Lizenzschlüssel beim Kauf, Aktivierung, Verwaltung, Handy-App unter `/onepc-app/` |
+| [`onepc-android/`](onepc-android/) | Android-App „OnePC“ (öffnet die Handy-App aus dem Shop mit eigenem Symbol) |
+| [`.github/workflows/`](.github/workflows/) | Baut Windows-Installer und Android-APK und veröffentlicht die Releases |
 
-function readTodos() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    return Array.isArray(saved) ? saved : [];
-  } catch (error) {
-    console.warn('Unable to read todos from local storage.', error);
-    return [];
-  }
-}
+## Downloads
 
-function saveTodos(todos) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-}
+Alle Dateien stehen unter [Releases](../../releases):
 
-function updateCounter(todos) {
-  const remaining = todos.filter((todo) => !todo.completed).length;
-  const label = `${remaining} item${remaining === 1 ? '' : 's'} left`;
-  taskCounter.textContent = label;
-}
+- **Windows:** `OnePC-Guard-Setup-<Version>.exe` (aktualisiert sich danach selbst)
+- **Android:** `OnePC-<Version>.apk` im Release „OnePC für Android“
+- **Shop-Plugin:** `onepc-license-server-<Version>.zip`
+- **Shop-Bilder:** `onepc-guard-shopbilder.zip`
 
-function renderTodos() {
-  const todos = readTodos();
-  const filteredTodos = todos.filter((todo) => {
-    if (currentFilter === 'active') return !todo.completed;
-    if (currentFilter === 'completed') return todo.completed;
-    return true;
-  });
+## Neue Version veröffentlichen
 
-  todoList.innerHTML = '';
+- **Windows-Programm:** Version in `onepc-guard/package.json` erhöhen, Abschnitt in `onepc-guard/CHANGELOG.md` ergänzen, pushen. Installierte Programme aktualisieren sich innerhalb von 6 Stunden.
+- **Android-App:** `versionCode` und `versionName` in `onepc-android/app/build.gradle.kts` erhöhen, pushen.
+- **Plugin:** Version im Kopf von `onepc-license-server/onepc-license-server.php` erhöhen; die ZIP liegt dem nächsten Windows-Release bei.
 
-  filteredTodos.forEach((todo) => {
-    const clone = template.content.cloneNode(true);
-    const item = clone.querySelector('.todo-item');
-    const checkbox = clone.querySelector('.checkbox');
-    const text = clone.querySelector('.task-text');
-    const deleteButton = clone.querySelector('.delete-btn');
-
-    item.classList.toggle('completed', todo.completed);
-    checkbox.checked = todo.completed;
-    text.textContent = todo.text;
-
-    checkbox.addEventListener('change', () => {
-      toggleTodo(todo.id);
-    });
-
-    deleteButton.addEventListener('click', () => {
-      deleteTodo(todo.id);
-    });
-
-    todoList.appendChild(clone);
-  });
-
-  updateCounter(todos);
-  syncFilters();
-}
-
-function syncFilters() {
-  filterButtons.forEach((button) => {
-    const isActive = button.dataset.filter === currentFilter;
-    button.classList.toggle('active', isActive);
-    button.setAttribute('aria-pressed', String(isActive));
-  });
-}
-
-function addTodo(text) {
-  const trimmed = text.trim();
-  if (!trimmed) return;
-
-  const todos = readTodos();
-  todos.push({
-    id: crypto.randomUUID ? crypto.randomUUID() : `todo-${Date.now()}-${Math.random()}`,
-    text: trimmed,
-    completed: false,
-  });
-
-  saveTodos(todos);
-  renderTodos();
-}
-
-function toggleTodo(id) {
-  const todos = readTodos();
-  const updated = todos.map((todo) =>
-    todo.id === id ? { ...todo, completed: !todo.completed } : todo
-  );
-
-  saveTodos(updated);
-  renderTodos();
-}
-
-function deleteTodo(id) {
-  const todos = readTodos().filter((todo) => todo.id !== id);
-  saveTodos(todos);
-  renderTodos();
-}
-
-function clearCompleted() {
-  const todos = readTodos().filter((todo) => !todo.completed);
-  saveTodos(todos);
-  renderTodos();
-}
-
-function setFilter(nextFilter) {
-  if (!FILTERS.includes(nextFilter)) return;
-  currentFilter = nextFilter;
-  renderTodos();
-}
-
-todoForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  addTodo(todoInput.value);
-  todoInput.value = '';
-  todoInput.focus();
-});
-
-clearCompletedBtn.addEventListener('click', clearCompleted);
-
-filterButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    setFilter(button.dataset.filter);
-  });
-});
-
-renderTodos();
+Details: [`onepc-guard/README.md`](onepc-guard/README.md)

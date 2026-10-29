@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.1.1
+
+- Einstellungen: Hinweis zur OnePC-App aktualisiert – Anmeldung mit E-Mail-Adresse und Lizenzschlüssel, Android-App „OnePC“
+- Erste Version, die über die automatische Aktualisierung verteilt wird (installiertes 1.1.0 aktualisiert sich selbst)
+
+**Dateien in diesem Release**
+- `OnePC-Guard-Setup-1.1.1.exe` – Installer für Windows 10/11 (64 Bit)
+- `OnePC-Guard-Setup-1.1.1.zip` – derselbe Installer zum Hochladen ins WooCommerce-Produkt
+- `onepc-license-server-1.2.0.zip` – Lizenz-Plugin 1.2.0 (Handy-App mit Anmeldung per E-Mail + Lizenzschlüssel)
+- `onepc-guard-shopbilder.zip` – Logo, Produktbilder, Banner und Screenshots
+- Android-App: siehe Release „OnePC für Android“
+
 ## 1.1.0
 
 **Neu: OnePC-App fürs Handy**

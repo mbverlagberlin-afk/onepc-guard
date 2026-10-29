@@ -70,10 +70,11 @@ jobs:
             exit 0
           fi
 
+          PLUGIN_VERSION=$(sed -n 's/^ \* Version: \([0-9.]*\).*/\1/p' ../onepc-license-server/onepc-license-server.php)
           mkdir -p release
           cp "dist/OnePC-Guard-Setup-$VERSION.exe" "dist/OnePC-Guard-Setup-$VERSION.exe.blockmap" dist/latest.yml release/
           pwsh -NoProfile -Command "Compress-Archive -Path 'dist/OnePC-Guard-Setup-$VERSION.exe' -DestinationPath 'release/OnePC-Guard-Setup-$VERSION.zip'"
-          pwsh -NoProfile -Command "Compress-Archive -Path '../onepc-license-server' -DestinationPath 'release/onepc-license-server-$VERSION.zip'"
+          pwsh -NoProfile -Command "Compress-Archive -Path '../onepc-license-server' -DestinationPath 'release/onepc-license-server-$PLUGIN_VERSION.zip'"
           pwsh -NoProfile -Command "Compress-Archive -Path 'marketing/*.png','marketing/screenshots' -DestinationPath 'release/onepc-guard-shopbilder.zip'"
 
           awk -v v="## $VERSION" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > release/notes.md

@@ -459,7 +459,7 @@ pages.settings = async () => {
             <label class="switch"><input type="checkbox" data-setting="remote" ${st.remote ? 'checked' : ''} ${licensed ? '' : 'disabled'}>
                 <span><strong>Mit der OnePC-App verbinden</strong>
                 <span class="muted">Übertragen werden nur Bewertung, gefundene Probleme, Ergebnisse von Prüfung, Aufräumen und Sicherung sowie die Programmversion – keine Dateien. OnePC Guard läuft dafür im Infobereich weiter, wenn du das Fenster schließt.</span></span></label>
-            <div class="row" style="margin-top:8px"><p class="spacer muted">Auf dem Handy öffnen und mit dem Kundenkonto anmelden, mit dem die Lizenz gekauft wurde:</p>
+            <div class="row" style="margin-top:8px"><p class="spacer muted">Auf dem Handy die Android-App „OnePC“ oder onemultimedia.de/onepc-app/ öffnen und mit E-Mail-Adresse und Lizenzschlüssel aus der Bestellung anmelden:</p>
                 <button class="button" data-action="open" data-target="mobileapp">App-Adresse öffnen</button></div>
         </section>
 

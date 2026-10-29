@@ -43,16 +43,28 @@ jobs:
           path: onepc-android/OnePC-*.apk
           if-no-files-found: error
 
-      # Test-Release mit direktem Download-Link fürs Handy (wird bei jedem Build ersetzt).
-      - name: Test-Release aktualisieren
+      # Release mit direktem Download-Link fürs Handy. Es wird nie als „latest“
+      # markiert, weil das Windows-Programm seine Updates über „latest“ findet.
+      - name: Android-Release aktualisieren
         if: github.repository == 'mbverlagberlin-afk/onepc-guard'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="android-v$VERSION"
+          cat > notes.md <<'NOTES'
+          OnePC für Android – Status, Virenprüfung und Aufräumen deiner PCs vom Handy aus.
+
+          **Installieren:** `OnePC-*.apk` auf dem Handy herunterladen, öffnen und „Aus dieser Quelle installieren“ erlauben. Bei einer Warnung von Google Play Protect „Trotzdem installieren“ wählen.
+
+          **Anmelden:** mit E-Mail-Adresse und Lizenzschlüssel aus der Bestellung bei onemultimedia.de.
+
+          **Voraussetzungen:** OnePC Guard ab 1.1.0 auf dem PC mit eingeschalteter Einstellung „Mit der OnePC-App verbinden“; im Shop das Lizenz-Plugin ab 1.2.0.
+          NOTES
+          sed -i 's/^          //' notes.md
           if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --prerelease --target "$GITHUB_SHA" \
-              --title "OnePC für Android $VERSION (Testversion)" \
-              --notes "Testversion der OnePC-App für Android. Herunterladen auf dem Handy, öffnen und Installation aus dieser Quelle erlauben. Benötigt das Lizenz-Plugin ab 1.1.0 im Shop."
+            gh release create "$TAG" --target "$GITHUB_SHA" --latest=false \
+              --title "OnePC für Android $VERSION" --notes-file notes.md
           fi
           gh release upload "$TAG" "OnePC-$VERSION.apk" --clobber
+          gh release edit "$TAG" --prerelease=false --latest=false \
+            --title "OnePC für Android $VERSION" --notes-file notes.md
