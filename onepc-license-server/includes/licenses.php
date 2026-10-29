@@ -66,8 +66,7 @@ function opls_install() {
 
     opls_keypair();
     update_option('opls_db_version', OPLS_DB_VERSION);
-    // Adresse der Handy-App (/onepc-app/) beim nächsten Seitenaufruf registrieren.
-    update_option('opls_flush_rewrite', 1);
+    delete_option('opls_flush_rewrite'); // aus 1.1.0–1.1.2, nicht mehr nötig
 }
 
 /**

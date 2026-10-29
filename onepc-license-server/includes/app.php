@@ -16,33 +16,44 @@ function opls_app_path() {
     return trailingslashit((string) wp_parse_url(opls_app_url(), PHP_URL_PATH));
 }
 
-add_action('init', function () {
-    add_rewrite_rule('^onepc-app/?$', 'index.php?opls_app=index', 'top');
-    add_rewrite_rule('^onepc-app/(manifest\.webmanifest|sw\.js)$', 'index.php?opls_app=$matches[1]', 'top');
+/**
+ * Erkennt Aufrufe der App direkt an der Adresse – unabhängig von Permalink-
+ * Einstellungen und WordPress-Adressregeln. Zusätzlich funktioniert immer
+ * ?opls_app=index (z. B. bei „einfachen“ Permalinks).
+ */
+function opls_app_requested_view() {
+    $views = ['index', 'manifest.webmanifest', 'sw.js'];
 
-    if (get_option('opls_flush_rewrite')) {
-        delete_option('opls_flush_rewrite');
-        flush_rewrite_rules(false);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nur Anzeige
+    if (isset($_GET['opls_app'])) {
+        $view = (string) wp_unslash($_GET['opls_app']);
+        return in_array($view, $views, true) ? $view : 'index';
     }
-});
 
-add_filter('query_vars', function ($vars) {
-    $vars[] = 'opls_app';
-    return $vars;
-});
+    $uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
+    $path = rawurldecode((string) wp_parse_url($uri, PHP_URL_PATH));
+    $base = opls_app_path();
 
-// WordPress darf diese Adressen nicht umleiten (z. B. Schrägstrich anhängen):
-// Browser lehnen weitergeleitete Service-Worker ab, dann ist die App nicht installierbar.
-add_filter('redirect_canonical', function ($redirect) {
-    return get_query_var('opls_app') ? false : $redirect;
-});
+    if ($path === $base || $path === untrailingslashit($base)) {
+        return 'index';
+    }
+    foreach (['manifest.webmanifest', 'sw.js'] as $file) {
+        if ($path === $base . $file) {
+            return $file;
+        }
+    }
+    return null;
+}
 
-add_action('template_redirect', function () {
-    $view = get_query_var('opls_app');
-    if ($view === '' || $view === null) {
+// So früh wie möglich ausliefern: vor 404-Erkennung und Weiterleitungen
+// (Browser lehnen weitergeleitete Service-Worker ab).
+add_action('parse_request', function () {
+    $view = opls_app_requested_view();
+    if ($view === null) {
         return;
     }
 
+    status_header(200);
     if ($view === 'manifest.webmanifest') {
         opls_app_manifest();
     } elseif ($view === 'sw.js') {
