@@ -1,0 +1,2 @@
+# Python dependencies for the project.
+# This project intentionally uses the standard library only.
